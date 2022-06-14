@@ -27,6 +27,7 @@ const deleteCard = (req, res) => {
     .then((card) => {
       if (!card) {
         res.status(NOT_FOUND).send({ message: 'Место не найдено' });
+        return;
       }
       res.send({ data: card });
     })
@@ -46,6 +47,7 @@ const addLike = (req, res) => {
     .then((card) => {
       if (!card) {
         res.status(NOT_FOUND).send({ message: 'Место не найдено' });
+        return;
       }
       res.send({ data: card });
     })
@@ -65,6 +67,7 @@ const removeLike = (req, res) => {
     .then((card) => {
       if (!card) {
         res.status(NOT_FOUND).send({ message: 'Место не найдено' });
+        return;
       }
       res.send({ data: card });
     })

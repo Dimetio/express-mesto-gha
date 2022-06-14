@@ -47,6 +47,7 @@ const updateUser = (req, res) => {
     .then((user) => {
       if (!user) {
         res.status(NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' });
+        return;
       }
       res.send({ data: user });
     })
@@ -67,6 +68,7 @@ const updateAvatar = (req, res) => {
     .then((user) => {
       if (!user) {
         res.status(NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' });
+        return;
       }
       res.send({ data: user });
     })
