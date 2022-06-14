@@ -21,8 +21,24 @@ const deleteCard = (req, res) => {
     .catch((err) => res.send({ message: err.message }));
 };
 
+const addLike = (req, res) => {
+  const owner = req.user._id;
+  Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: owner } }, { new: true })
+    .then((card) => res.send({ data: card }))
+    .catch((err) => res.send({ message: err.message }));
+};
+
+const removeLike = (req, res) => {
+  const owner = req.user._id;
+  Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: owner } }, { new: true })
+    .then((card) => res.send({ data: card }))
+    .catch((err) => res.send({ message: err.message }));
+};
+
 module.exports = {
   getCards,
   createCard,
   deleteCard,
+  addLike,
+  removeLike,
 };
