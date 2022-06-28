@@ -1,11 +1,11 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { BAD_REQUEST } = require('../utils/error_code');
 const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 const ConflictError = require('../errors/ConflictError');
 const CastError = require('../errors/CastError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
+const BadRequest = require('../errors/BadRequest');
 
 const getUsers = (req, res, next) => {
   User.find({})
@@ -62,8 +62,8 @@ const updateUser = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: 'Введенные данные не прошли валидацию' });
-      } else if (err.path === '_id') {
+        next(new BadRequest('Введенные данные не прошли валидацию'));
+      } else if (err.name === 'CastError') {
         next(new CastError('Неправильный id'));
       } else {
         next(err);
@@ -97,8 +97,8 @@ const updateAvatar = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: 'Введенные данные не прошли валидацию' });
-      } else if (err.path === '_id') {
+        next(new BadRequest('Введенные данные не прошли валидацию'));
+      } else if (err.name === 'CastError') {
         next(new CastError('Неправильный id'));
       } else {
         next(err);
