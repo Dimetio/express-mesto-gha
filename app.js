@@ -15,19 +15,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '62a867923a301ac83bbd62be',
-  };
-
-  next();
-});
-
-app.post('/signin', login);
+// роуты, не требующие авторизации
 app.post('/signup', createUser);
+app.post('/signin', login);
 
+// авторизация
 app.use(auth);
 
+// роуты, которым авторизация нужна
 app.use(userRoutes);
 app.use(cardRoutes);
 

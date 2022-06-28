@@ -77,6 +77,22 @@ const updateUser = (req, res) => {
     });
 };
 
+const getCurrentUser = (req, res) => {
+  const id = req.user._id;
+
+  User.findById(id)
+    .then((user) => {
+      if (!user) {
+        res.status(NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' });
+        return;
+      }
+      res.send({ data: user });
+    })
+    .cath(() => {
+      res.status(SERVER_ERROR).send({ message: 'Ой! Что-то пошло не так, мы скоро поправим' });
+    });
+};
+
 const updateAvatar = (req, res) => {
   const { avatar } = req.body;
   const id = req.user._id;
@@ -105,7 +121,7 @@ const login = (req, res) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'secret-key', { expriresIn: '7d' });
+      const token = jwt.sign({ _id: user._id }, 'secret-key', { expiresIn: '7d' });
       res.send({ token });
     })
     .catch(() => {
@@ -122,4 +138,5 @@ module.exports = {
   updateUser,
   updateAvatar,
   login,
+  getCurrentUser,
 };
