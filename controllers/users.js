@@ -45,6 +45,10 @@ const createUser = (req, res, next) => {
     .catch((err) => {
       if (err.code === 11000) {
         next(new ConflictError('Пользователь уже сущетсвует'));
+      } else if (err.name === 'ValidationError') {
+        next(new BadRequest('Введенные данные не прошли валидацию'));
+      } else {
+        next(err);
       }
     });
 };
