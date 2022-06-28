@@ -8,14 +8,14 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false,
     minlength: [2, 'Не маенее чем 2 символа'],
-    maxlength: [2, 'Не более чем 30 символов'],
+    maxlength: [30, 'Не более чем 30 символов'],
     default: 'Жак-Ив Кусто',
   },
   about: {
     type: String,
     required: false,
     minlength: [2, 'Не маенее чем 2 символа'],
-    maxlength: [2, 'Не более чем 30 символов'],
+    maxlength: [30, 'Не более чем 30 символов'],
     default: 'Исследователь',
   },
   avatar: {
