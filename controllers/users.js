@@ -1,33 +1,30 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { BAD_REQUEST, NOT_FOUND, SERVER_ERROR } = require('../utils/error_code');
+const { BAD_REQUEST } = require('../utils/error_code');
 const User = require('../models/user');
+const NotFoundError = require('../errors/NotFoundError');
+const ConflictError = require('../errors/ConflictError');
+const CastError = require('../errors/CastError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(SERVER_ERROR).send({ message: 'Ой! Что-то пошло не так, мы скоро поправим' }));
+    .catch(next);
 };
 
-const getUser = (req, res) => {
+const getUser = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' });
-        return;
+        throw new NotFoundError('Нет пользователя с таким id');
       }
       res.send({ data: user });
     })
-    .catch((err) => {
-      if (err.path === '_id') {
-        res.status(BAD_REQUEST).send({ message: 'Неправильный id' });
-      } else {
-        res.status(SERVER_ERROR).send({ message: 'Ой! Что-то пошло не так, мы скоро поправим' });
-      }
-    });
+    .catch(next);
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const {
     name,
     about,
@@ -46,23 +43,20 @@ const createUser = (req, res) => {
     }))
     .then((user) => res.send({ data: user }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: 'Введенные данные не прошли валидацию' });
-      } else {
-        res.status(SERVER_ERROR).send({ message: 'Ой! Что-то пошло не так, мы скоро поправим' });
+      if (err.code === 11000) {
+        next(new ConflictError('Пользователь уже сущетсвует'));
       }
     });
 };
 
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
   const { name, about } = req.body;
   const id = req.user._id;
 
   User.findByIdAndUpdate(id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' });
-        return;
+        throw new NotFoundError('Запрашиваемый пользователь не найден');
       }
       res.send({ data: user });
     })
@@ -70,38 +64,34 @@ const updateUser = (req, res) => {
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Введенные данные не прошли валидацию' });
       } else if (err.path === '_id') {
-        res.status(BAD_REQUEST).send({ message: 'Неправильный id' });
+        next(new CastError('Неправильный id'));
       } else {
-        res.status(SERVER_ERROR).send({ message: 'Ой! Что-то пошло не так, мы скоро поправим' });
+        next(err);
       }
     });
 };
 
-const getCurrentUser = (req, res) => {
+const getCurrentUser = (req, res, next) => {
   const id = req.user._id;
 
   User.findById(id)
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' });
-        return;
+        throw new NotFoundError('Запрашиваемый пользователь не найден');
       }
       res.send({ data: user });
     })
-    .cath(() => {
-      res.status(SERVER_ERROR).send({ message: 'Ой! Что-то пошло не так, мы скоро поправим' });
-    });
+    .cath(next);
 };
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   const id = req.user._id;
 
   User.findByIdAndUpdate(id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND).send({ message: 'Запрашиваемый пользователь не найден' });
-        return;
+        throw new NotFoundError('Запрашиваемый пользователь не найден');
       }
       res.send({ data: user });
     })
@@ -109,14 +99,14 @@ const updateAvatar = (req, res) => {
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: 'Введенные данные не прошли валидацию' });
       } else if (err.path === '_id') {
-        res.status(BAD_REQUEST).send({ message: 'Неправильный id' });
+        next(new CastError('Неправильный id'));
       } else {
-        res.status(SERVER_ERROR).send({ message: 'Ой! Что-то пошло не так, мы скоро поправим' });
+        next(err);
       }
     });
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -125,9 +115,7 @@ const login = (req, res) => {
       res.send({ token });
     })
     .catch(() => {
-      res
-        .status(401)
-        .send({ message: 'Неправильные почта или пароль' });
+      next(new UnauthorizedError('Неправильные почта или пароль'));
     });
 };
 
