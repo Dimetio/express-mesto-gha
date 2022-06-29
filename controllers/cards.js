@@ -19,16 +19,16 @@ const createCard = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequest('Введенные данные не прошли валидацию'));
-      } else {
-        next(err);
       }
+
+      next(err);
     });
 };
 
 const deleteCard = (req, res, next) => {
   Card.findById(req.params._id)
     .then((card) => {
-      if (card.owner !== req.user._id) {
+      if (card.owner.toString() !== req.user._id) {
         throw new UnauthorizedError('Недостаточно прав');
       }
 
