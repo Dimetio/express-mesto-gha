@@ -1,8 +1,6 @@
 const Card = require('../models/card');
 const NotFoundError = require('../errors/NotFoundError');
-const CastError = require('../errors/CastError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
-const BadRequest = require('../errors/BadRequest');
 
 const getCards = (req, res, next) => {
   Card.find({})
@@ -15,37 +13,26 @@ const createCard = (req, res, next) => {
   const owner = req.user._id;
 
   Card.create({ name, link, owner })
-    .then((card) => res.send({ data: card }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        next(new BadRequest('Введенные данные не прошли валидацию'));
-      }
-
-      next(err);
-    });
+    .then((card) => res.status(201).send({ data: card }))
+    .catch(next);
 };
 
 const deleteCard = (req, res, next) => {
   Card.findById(req.params._id)
     .then((card) => {
+      if (!card) {
+        throw new NotFoundError('Место не найдено');
+      }
+
       if (card.owner.toString() !== req.user._id) {
         throw new UnauthorizedError('Недостаточно прав');
       }
 
       Card.findByIdAndRemove(req.params.cardId)
-        .then((cardData) => {
-          if (!cardData) {
-            throw new NotFoundError('Место не найдено');
-          }
-          res.send({ data: cardData });
+        .then(() => {
+          res.send({ data: card });
         })
-        .catch((err) => {
-          if (err.path === '_id') {
-            next(new BadRequest('Введенные данные не прошли валидацию'));
-          }
-
-          next(err);
-        });
+        .catch(next);
     })
     .catch(next);
 };
@@ -60,13 +47,7 @@ const addLike = (req, res, next) => {
       }
       res.send({ data: card });
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new CastError('Неправильный id'));
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
 };
 
 const removeLike = (req, res, next) => {
@@ -79,13 +60,7 @@ const removeLike = (req, res, next) => {
       }
       res.send({ data: card });
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new CastError('Неправильный id'));
-      } else {
-        next(err);
-      }
-    });
+    .catch(next);
 };
 
 module.exports = {

@@ -48,6 +48,18 @@ app.use(errors());
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
 
+  if (err.code === 11000) {
+    res.status(409).sned({ message: 'Такой email уже занят' });
+  }
+
+  if (err.name === 'ValidationError') {
+    res.status(400).send({ message: 'Данные не прошли валидацию' });
+  }
+
+  if (err.name === 'CastError') {
+    res.status(400).send({ message: 'id не верный' });
+  }
+
   res
     .status(statusCode)
     .send({
