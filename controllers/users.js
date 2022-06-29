@@ -24,6 +24,26 @@ const getUser = (req, res, next) => {
     .catch(next);
 };
 
+const getCurrentUser = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Запрашиваемый пользователь не найден');
+      }
+      res.send({ data: user });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequest('Введенные данные не прошли валидацию'));
+      } else if (err.name === 'CastError') {
+        next(new CastError('Неправильный id'));
+      }
+
+      next(err);
+    })
+    .catch(next);
+};
+
 const createUser = (req, res, next) => {
   const {
     name,
@@ -32,6 +52,10 @@ const createUser = (req, res, next) => {
     email,
     password,
   } = req.body;
+
+  if (!email || !password) {
+    throw new BadRequest('Не введен email или пароль');
+  }
 
   bcrypt.hash(password, 10)
     .then((hash) => User.create({
@@ -54,12 +78,13 @@ const createUser = (req, res, next) => {
     .catch((err) => {
       if (err.code === 11000) {
         next(new ConflictError('Пользователь уже сущетсвует'));
-      } else if (err.name === 'ValidationError') {
-        next(new BadRequest('Введенные данные не прошли валидацию'));
-      } else {
-        next(err);
       }
-    });
+
+      if (err.name === 'ValidationError') {
+        next(new BadRequest('Введенные данные не прошли валидацию'));
+      }
+    })
+    .catch(next);
 };
 
 const updateUser = (req, res, next) => {
@@ -76,25 +101,15 @@ const updateUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequest('Введенные данные не прошли валидацию'));
-      } else if (err.name === 'CastError') {
+      }
+
+      if (err.name === 'CastError') {
         next(new CastError('Неправильный id'));
-      } else {
-        next(err);
       }
-    });
-};
 
-const getCurrentUser = (req, res, next) => {
-  const id = req.user._id;
-
-  User.find(id)
-    .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Запрашиваемый пользователь не найден');
-      }
-      res.send({ data: user });
+      next(err);
     })
-    .cath(next);
+    .catch(next);
 };
 
 const updateAvatar = (req, res, next) => {
@@ -111,25 +126,33 @@ const updateAvatar = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequest('Введенные данные не прошли валидацию'));
-      } else if (err.name === 'CastError') {
-        next(new CastError('Неправильный id'));
-      } else {
-        next(err);
       }
-    });
+
+      if (err.name === 'CastError') {
+        next(new CastError('Неправильный id'));
+      }
+
+      next(err);
+    })
+    .catch(next);
 };
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
 
-  return User.findUserByCredentials(email, password)
+  if (!email || !password) {
+    throw new BadRequest('Не введен email или пароль');
+  }
+
+  User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, 'secret-key', { expiresIn: '7d' });
       res.send({ token });
     })
     .catch(() => {
       next(new UnauthorizedError('Неправильные почта или пароль'));
-    });
+    })
+    .catch(next);
 };
 
 module.exports = {

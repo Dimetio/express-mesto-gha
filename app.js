@@ -39,12 +39,13 @@ app.use('/users', auth, userRoutes);
 app.use('/cards', auth, cardRoutes);
 
 app.all('*', (req, res, next) => {
-  next(new NotFoundError('Неправильный путь. Eror 404'));
+  next(new NotFoundError('Неправильный путь. Error 404'));
 });
 
 app.use(errors());
 
-app.use((err, req, res) => {
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
 
   res
