@@ -6,6 +6,7 @@ const auth = require('./middlewares/auth');
 const userRoutes = require('./routes/users');
 const cardRoutes = require('./routes/cards');
 const { login, createUser } = require('./controllers/users');
+const { regular } = require('./utils/regular');
 
 const { PORT = 3000 } = process.env;
 
@@ -16,12 +17,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
-// роуты, не требующие авторизации
 app.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string(),
+    avatar: Joi.string().pattern(regular),
     email: Joi.string().email().required(),
     password: Joi.string().required(),
   }),
@@ -34,7 +34,6 @@ app.post('/signin', celebrate({
   }),
 }), login);
 
-// роуты, которым авторизация нужна
 app.use('/users', auth, userRoutes);
 app.use('/cards', auth, cardRoutes);
 
@@ -44,7 +43,7 @@ app.all('*', (req, res) => {
 
 app.use(errors());
 
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   const { statusCode = 500, message } = err;
 
   res
