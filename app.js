@@ -7,6 +7,7 @@ const userRoutes = require('./routes/users');
 const cardRoutes = require('./routes/cards');
 const { login, createUser } = require('./controllers/users');
 const { regular } = require('./utils/regular');
+const NotFoundError = require('./errors/NotFoundError');
 
 const { PORT = 3000 } = process.env;
 
@@ -37,8 +38,8 @@ app.post('/signin', celebrate({
 app.use('/users', auth, userRoutes);
 app.use('/cards', auth, cardRoutes);
 
-app.all('*', (req, res) => {
-  res.status(404).send({ message: 'Error 404' });
+app.all('*', (req, res, next) => {
+  next(new NotFoundError('Неправильный путь. Eror 404'));
 });
 
 app.use(errors());
