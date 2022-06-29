@@ -42,12 +42,12 @@ const deleteCard = (req, res, next) => {
         .catch((err) => {
           if (err.path === '_id') {
             next(new BadRequest('Введенные данные не прошли валидацию'));
-          } else {
-            next(err);
           }
+
+          next(err);
         });
     })
-    .catch();
+    .catch(next);
 };
 
 const addLike = (req, res, next) => {
