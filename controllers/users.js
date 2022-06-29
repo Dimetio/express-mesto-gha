@@ -41,7 +41,16 @@ const createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      const { _id } = user;
+      res.send({
+        _id,
+        name,
+        about,
+        avatar,
+        email,
+      });
+    })
     .catch((err) => {
       if (err.code === 11000) {
         next(new ConflictError('Пользователь уже сущетсвует'));
@@ -78,7 +87,7 @@ const updateUser = (req, res, next) => {
 const getCurrentUser = (req, res, next) => {
   const id = req.user._id;
 
-  User.findById(id)
+  User.find(id)
     .then((user) => {
       if (!user) {
         throw new NotFoundError('Запрашиваемый пользователь не найден');
