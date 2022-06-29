@@ -7,14 +7,14 @@ const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: false,
-    minlength: [2, 'Не маенее чем 2 символа'],
+    minlength: [2, 'Не менее чем 2 символа'],
     maxlength: [30, 'Не более чем 30 символов'],
     default: 'Жак-Ив Кусто',
   },
   about: {
     type: String,
     required: false,
-    minlength: [2, 'Не маенее чем 2 символа'],
+    minlength: [2, 'Не менее чем 2 символа'],
     maxlength: [30, 'Не более чем 30 символов'],
     default: 'Исследователь',
   },
@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     validate: {
       validator: (email) => isEmail(email),
-      mesasge: 'Некорректный email',
+      message: 'Некорректный email',
     },
   },
   password: {
