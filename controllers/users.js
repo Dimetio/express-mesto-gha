@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
+const BadRequestError = require('../errors/BadRequestError');
+const ConflictError = require('../errors/ConflictError');
 
 const getUsers = (req, res, next) => {
   User.find({})
@@ -59,7 +61,17 @@ const createUser = (req, res, next) => {
         email,
       });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.code === 11000) {
+        next(new ConflictError(`Такой ${email} уже занят`));
+      }
+
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Данные не прошли валидацию'));
+      }
+
+      next(err);
+    });
 };
 
 const updateUser = (req, res, next) => {
@@ -73,7 +85,13 @@ const updateUser = (req, res, next) => {
       }
       res.send({ data: user });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Данные не прошли валидацию'));
+      }
+
+      next(err);
+    });
 };
 
 const updateAvatar = (req, res, next) => {
@@ -87,7 +105,13 @@ const updateAvatar = (req, res, next) => {
       }
       res.send({ data: user });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Данные не прошли валидацию'));
+      }
+
+      next(err);
+    });
 };
 
 const login = (req, res, next) => {

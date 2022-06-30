@@ -18,6 +18,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
+app.use((req, res, next) => {
+  req.user = {
+    _id: '6d8b8592978f8bd833ca8133',
+  };
+
+  next();
+});
+
 app.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
@@ -35,8 +43,8 @@ app.post('/signin', celebrate({
   }),
 }), login);
 
-app.use('/users', auth, userRoutes);
-app.use('/cards', auth, cardRoutes);
+app.use('/users', userRoutes);
+app.use('/cards', cardRoutes);
 
 app.all('*', (req, res, next) => {
   next(new NotFoundError('Неправильный путь. Error 404'));
@@ -47,18 +55,6 @@ app.use(errors());
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
-
-  if (err.code === 11000) {
-    res.status(409).sned({ message: 'Такой email уже занят' });
-  }
-
-  if (err.name === 'ValidationError') {
-    res.status(400).send({ message: 'Данные не прошли валидацию' });
-  }
-
-  if (err.name === 'CastError') {
-    res.status(400).send({ message: 'id не верный' });
-  }
 
   res
     .status(statusCode)

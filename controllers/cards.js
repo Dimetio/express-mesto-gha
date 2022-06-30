@@ -1,6 +1,7 @@
 const Card = require('../models/card');
 const NotFoundError = require('../errors/NotFoundError');
-const UnauthorizedError = require('../errors/UnauthorizedError');
+const ForbiddenError = require('../errors/ForbiddenError');
+const BadRequestError = require('../errors/BadRequestError');
 
 const getCards = (req, res, next) => {
   Card.find({})
@@ -13,25 +14,29 @@ const createCard = (req, res, next) => {
   const owner = req.user._id;
 
   Card.create({ name, link, owner })
-    .then((card) => res.status(201).send({ data: card }))
-    .catch(next);
+    .then((card) => res.send({ data: card }))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Данные не прошли валидацию'));
+      }
+
+      next(err);
+    });
 };
 
 const deleteCard = (req, res, next) => {
-  Card.findById(req.params._id)
+  Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Место не найдено');
+        throw new NotFoundError('Карточка не найдена');
       }
 
       if (card.owner.toString() !== req.user._id) {
-        throw new UnauthorizedError('Недостаточно прав');
+        throw new ForbiddenError('Недостаточно прав');
       }
 
       Card.findByIdAndRemove(req.params.cardId)
-        .then(() => {
-          res.send({ data: card });
-        })
+        .then(() => res.send({ data: card }))
         .catch(next);
     })
     .catch(next);
@@ -43,7 +48,7 @@ const addLike = (req, res, next) => {
   Card.findByIdAndUpdate(req.params.cardId, { $addToSet: { likes: owner } }, { new: true })
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Место не найдено');
+        throw new NotFoundError('Карточка не найдена');
       }
       res.send({ data: card });
     })
@@ -56,7 +61,7 @@ const removeLike = (req, res, next) => {
   Card.findByIdAndUpdate(req.params.cardId, { $pull: { likes: owner } }, { new: true })
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Место не найдено');
+        throw new NotFoundError('Карточка не найдена');
       }
       res.send({ data: card });
     })
