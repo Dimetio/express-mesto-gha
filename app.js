@@ -18,14 +18,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '6d8b8592978f8bd833ca8133',
-  };
-
-  next();
-});
-
 app.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
@@ -43,8 +35,8 @@ app.post('/signin', celebrate({
   }),
 }), login);
 
-app.use('/users', userRoutes);
-app.use('/cards', cardRoutes);
+app.use('/users', auth, userRoutes);
+app.use('/cards', auth, cardRoutes);
 
 app.all('*', (req, res, next) => {
   next(new NotFoundError('Неправильный путь. Error 404'));
