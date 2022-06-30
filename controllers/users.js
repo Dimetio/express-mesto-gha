@@ -64,10 +64,12 @@ const createUser = (req, res, next) => {
     .catch((err) => {
       if (err.code === 11000) {
         next(new ConflictError(`Такой ${email} уже занят`));
+        return;
       }
 
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Данные не прошли валидацию'));
+        return;
       }
 
       next(err);
@@ -88,6 +90,7 @@ const updateUser = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Данные не прошли валидацию'));
+        return;
       }
 
       next(err);
@@ -108,6 +111,7 @@ const updateAvatar = (req, res, next) => {
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Данные не прошли валидацию'));
+        return;
       }
 
       next(err);
@@ -124,8 +128,7 @@ const login = (req, res, next) => {
     })
     .catch(() => {
       next(new UnauthorizedError('Неправильные почта или пароль'));
-    })
-    .catch(next);
+    });
 };
 
 module.exports = {
